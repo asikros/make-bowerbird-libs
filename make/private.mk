@@ -33,3 +33,8 @@ private_clean:
 ifdef bowerbird::test::suite
     $(call bowerbird::test::suite,private_test,test/bowerbird-libs)
 endif
+
+# FORCE target used by test files for recursive make invocations
+.PHONY: FORCE
+FORCE:
+	@:
