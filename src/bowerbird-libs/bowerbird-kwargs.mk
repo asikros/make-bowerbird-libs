@@ -4,8 +4,8 @@
 # This allows macros to accept named parameters in key=value format with flexible spacing.
 #
 # Usage:
-#   1. Call bowerbird::lib::kwargs-parse with all arguments
-#   2. Use helper functions to access and validate keyword arguments
+#   Call bowerbird::lib::kwargs-parse with arguments and use helper functions to access
+#   and validate keyword arguments
 #
 # Example:
 #   $(call bowerbird::lib::kwargs-parse,$1,$2,$3,$4,$5)
@@ -37,29 +37,44 @@ __BOWERBIRD_LIBS_KWARGS_ARG_NUMS := $(filter-out $(__BOWERBIRD_LIBS_KWARGS_ARGS_
 #
 #	Returns:
 #		Sets $(__BOWERBIRD_LIBS_KWARGS_VALUE_PREFIX).<key> variables for each parsed key=value pair.
-#		Clears any existing $(__BOWERBIRD_LIBS_KWARGS_VALUE_PREFIX).* variables to prevent leaking.
-#		Errors if KEYWORD_ARGS_LIMIT arguments are reached.
+#		Clears any existing variables to prevent leaking between calls.
 #
-#	Example:
+#	Note:
+#		This macro uses global scope, which is safe for sequential execution.
+#		Values are cleared between calls to prevent leaking.
+#		NOT parallel-safe: concurrent targets will clobber each other's kwargs values.
+#
+#	Example (parse-time, global scope):
 #		$(call bowerbird::lib::kwargs-parse,name=foo,path=bar,url=baz)
 #		$(call bowerbird::lib::kwargs,name)  # Returns: foo
 #
+#	Example (recipe, target-specific scope via eval):
+#		target:
+#			$(eval $(call bowerbird::lib::kwargs-parse,name=foo,path=bar))
+#			$(call bowerbird::lib::kwargs,name)  # Returns: foo
+#
 define bowerbird::lib::kwargs-parse
-# Clear existing keyword args to prevent leaking
+# Use global scope - no automatic target detection to avoid undefined variable warnings
+$(eval __BOWERBIRD_LIBS_KWARGS_CURRENT_SCOPE :=)
+$(eval __BOWERBIRD_LIBS_KWARGS_PREFIX := $(__BOWERBIRD_LIBS_KWARGS_VALUE_PREFIX))
+# Clear all previous kwargs values AND active list to prevent leaking
 $(foreach v,$(filter $(__BOWERBIRD_LIBS_KWARGS_VALUE_PREFIX).%,$(.VARIABLES)),$(eval $v :=))
-# Build argument list, filtering to only defined arguments
-$(eval __DEFINED_ARGS := $(foreach n,$(__BOWERBIRD_LIBS_KWARGS_ARG_NUMS),$(if $(filter-out undefined,$(origin $n)),$n)))
-$(eval __ALL_ARGS := $(strip $(foreach n,$(__DEFINED_ARGS),$($n) )))
-$(eval __SPLIT_ARGS := $(subst $(__BOWERBIRD_LIBS_KWARGS_COMMA),$(__BOWERBIRD_LIBS_KWARGS_SPACE),$(__ALL_ARGS)))
-# Error if too many arguments
-$(if $(word $(__BOWERBIRD_LIBS_KWARGS_ARGS_LIMIT),$(__SPLIT_ARGS)),\
-    $(error ERROR: Keyword argument limit reached (ARGS_LIMIT=$(__BOWERBIRD_LIBS_KWARGS_ARGS_LIMIT))))
-# Parse each key=value pair and store as $(__BOWERBIRD_LIBS_KWARGS_VALUE_PREFIX).<key>
-$(foreach arg,$(__SPLIT_ARGS),\
-    $(if $(findstring =,$(arg)),\
-        $(eval $(__BOWERBIRD_LIBS_KWARGS_VALUE_PREFIX).$(word 1,$(subst =, ,$(strip $(arg)))) := $(word 2,$(subst =, ,$(strip $(arg)))))\
+$(eval __BOWERBIRD_LIBS_KWARGS_ACTIVE :=)
+# Collect and parse argument values starting from $1, only for defined arguments (avoids undefined variable warnings)
+$(eval __KWARG_COUNT := 0)
+$(foreach n,$(__BOWERBIRD_LIBS_KWARGS_ARG_NUMS),\
+    $(if $(filter-out undefined,$(origin $n)),\
+        $(eval __KWARG_COUNT := $(words $(__KWARG_COUNT) x))\
+        $(if $(findstring =,$($n)),\
+            $(eval __KWARG_KEY := $(word 1,$(subst =, ,$(strip $($n)))))\
+            $(eval $(__BOWERBIRD_LIBS_KWARGS_PREFIX).$(__KWARG_KEY) := $(word 2,$(subst =, ,$(strip $($n)))))\
+            $(eval __BOWERBIRD_LIBS_KWARGS_ACTIVE += $(__KWARG_KEY))\
+        )\
     )\
 )
+# Error if too many arguments
+$(if $(word $(__BOWERBIRD_LIBS_KWARGS_ARGS_LIMIT),x $(__KWARG_COUNT)),\
+    $(error ERROR: Keyword argument limit reached (ARGS_LIMIT=$(__BOWERBIRD_LIBS_KWARGS_ARGS_LIMIT))))
 endef
 
 # bowerbird::lib::kwargs
@@ -81,19 +96,23 @@ endef
 
 # bowerbird::lib::kwargs-defined
 #
-#	Tests if a keyword argument is defined.
+#	Tests if a keyword argument was explicitly set (even if set to empty).
 #
 #	Args:
 #		$1: Key name
 #
 #	Returns:
-#		Non-empty if defined, empty otherwise
+#		Non-empty if the kwarg was explicitly passed, empty otherwise
+#
+#	Note:
+#		Returns non-empty even if the kwarg value is empty, allowing distinction
+#		between "not passed" and "passed with empty value".
 #
 #	Example:
 #		$(if $(call bowerbird::lib::kwargs-defined,branch),...)
 #
 define bowerbird::lib::kwargs-defined
-$(filter-out undefined,$(origin $(__BOWERBIRD_LIBS_KWARGS_VALUE_PREFIX).$1))
+$(filter $1,$(__BOWERBIRD_LIBS_KWARGS_ACTIVE))
 endef
 
 # bowerbird::lib::kwargs-default

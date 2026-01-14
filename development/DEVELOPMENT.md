@@ -4,6 +4,11 @@
 
 This repository contains common utility libraries for Bowerbird Make-based projects.
 
+For comprehensive guidelines on Makefile development and testing, see:
+- [Make Style Guide](https://github.com/ic-designer/make-bowerbird-docs/blob/main/docs/make-styleguide.md)
+- [Testing Guide](https://github.com/ic-designer/make-bowerbird-docs/blob/main/docs/testing-guide.md)
+- [Testing Workflow](https://github.com/ic-designer/make-bowerbird-docs/blob/main/docs/testing-workflow.md)
+
 ## Structure
 
 ```

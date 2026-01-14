@@ -16,8 +16,8 @@ WORKDIR_DEPS = $(WORKDIR_ROOT)/deps
 WORKDIR_TEST = $(WORKDIR_ROOT)/test/$(NAME)/$(VERSION)
 
 # Includes
-include make/deps.mk
 include bowerbird.mk
+include make/deps.mk
 
  # Targets
 .NOTPARALLEL: private_clean
@@ -31,7 +31,7 @@ private_clean:
 	@echo
 
 ifdef bowerbird::test::suite
-    $(call bowerbird::test::suite,private_test,test/bowerbird-libs)
+$(call bowerbird::test::suite,private_test,test/bowerbird-libs)
 endif
 
 # FORCE target used by test files for recursive make invocations
