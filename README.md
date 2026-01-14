@@ -23,7 +23,7 @@ A library for parsing keyword arguments in Make macros, enabling cleaner and mor
 **Example:**
 
 ```makefile
-include path/to/bowerbird-libs/bowerbird-libs.mk
+include path/to/bowerbird-libs/bowerbird.mk
 
 define my-macro
 $(eval \
