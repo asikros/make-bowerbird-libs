@@ -10,7 +10,7 @@ This directory contains design proposals for the Bowerbird Libraries project.
 
 ## Creating a Proposal
 
-See the [Bowerbird Docs - Proposals Guide](https://github.com/ic-designer/make-bowerbird-docs) for guidelines on creating proposals.
+See the [Bowerbird Docs - Proposals Guide](https://github.com/asikros/make-bowerbird-docs) for guidelines on creating proposals.
 
 ## Active Proposals
 
