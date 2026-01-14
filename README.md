@@ -1,5 +1,7 @@
 # Bowerbird Libraries
 
+[![Makefile CI](https://github.com/asikros/make-bowerbird-libs/actions/workflows/makefile.yml/badge.svg)](https://github.com/asikros/make-bowerbird-libs/actions/workflows/makefile.yml)
+
 Common utility libraries for Bowerbird Make-based projects.
 
 ## Overview
