@@ -31,7 +31,7 @@ private_clean:
 	@echo
 
 ifdef bowerbird::test::suite
-$(call bowerbird::test::suite,private_test,test/bowerbird-libs)
+$(call bowerbird::test::suite,private_test,test/bowerbird-libs,test*.mk,test*)
 endif
 
 # FORCE target used by test files for recursive make invocations
