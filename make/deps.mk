@@ -15,6 +15,23 @@ https://raw.githubusercontent.com/asikros/make-bowerbird-deps/\
 main/src/bowerbird-deps/bowerbird-deps.mk
 include $(BOWERBIRD_DEPS.MK)
 
+# Initialize override variables to avoid undefined variable warnings
+bowerbird-help.path ?=
+bowerbird-help.url ?=
+bowerbird-help.branch ?=
+bowerbird-help.revision ?=
+bowerbird-help.entry ?=
+bowerbird-githooks.path ?=
+bowerbird-githooks.url ?=
+bowerbird-githooks.branch ?=
+bowerbird-githooks.revision ?=
+bowerbird-githooks.entry ?=
+bowerbird-test.path ?=
+bowerbird-test.url ?=
+bowerbird-test.branch ?=
+bowerbird-test.revision ?=
+bowerbird-test.entry ?=
+
 $(call bowerbird::git-dependency, \
 	name=bowerbird-help, \
 	path=$(WORKDIR_DEPS)/bowerbird-help, \
