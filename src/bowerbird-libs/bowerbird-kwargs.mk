@@ -60,20 +60,26 @@ $(eval __BOWERBIRD_LIBS_KWARGS_PREFIX := $(__BOWERBIRD_LIBS_KWARGS_VALUE_PREFIX)
 # Clear all previous kwargs values AND active list to prevent leaking
 $(foreach v,$(filter $(__BOWERBIRD_LIBS_KWARGS_VALUE_PREFIX).%,$(.VARIABLES)),$(eval $v :=))
 $(eval __BOWERBIRD_LIBS_KWARGS_ACTIVE :=)
-# Collect and parse argument values starting from $1, only for defined arguments (avoids undefined variable warnings)
-$(eval __KWARG_COUNT := 0)
+# Build argument list dynamically by checking origin to avoid undefined variable warnings
+$(eval __KWARG_ARGS :=)
 $(foreach n,$(__BOWERBIRD_LIBS_KWARGS_ARG_NUMS),\
     $(if $(filter-out undefined,$(origin $n)),\
-        $(eval __KWARG_COUNT := $(words $(__KWARG_COUNT) x))\
-        $(if $(findstring =,$($n)),\
-            $(eval __KWARG_KEY := $(word 1,$(subst =, ,$(strip $($n)))))\
-            $(eval $(__BOWERBIRD_LIBS_KWARGS_PREFIX).$(__KWARG_KEY) := $(word 2,$(subst =, ,$(strip $($n)))))\
-            $(eval __BOWERBIRD_LIBS_KWARGS_ACTIVE += $(__KWARG_KEY))\
-        )\
+        $(eval __KWARG_ARGS += $($n))\
+    )\
+)
+# Space-separated list is already built via +=
+$(eval __KWARG_LIST := $(strip $(__KWARG_ARGS)))
+$(eval __KWARG_COUNT := $(words $(__KWARG_LIST)))
+# Parse each key=value pair
+$(foreach arg,$(__KWARG_LIST),\
+    $(if $(findstring =,$(arg)),\
+        $(eval __KWARG_KEY := $(word 1,$(subst =, ,$(strip $(arg)))))\
+        $(eval $(__BOWERBIRD_LIBS_KWARGS_PREFIX).$(__KWARG_KEY) := $(word 2,$(subst =, ,$(strip $(arg)))))\
+        $(eval __BOWERBIRD_LIBS_KWARGS_ACTIVE += $(__KWARG_KEY))\
     )\
 )
 # Error if too many arguments
-$(if $(word $(__BOWERBIRD_LIBS_KWARGS_ARGS_LIMIT),x $(__KWARG_COUNT)),\
+$(if $(word $(__BOWERBIRD_LIBS_KWARGS_ARGS_LIMIT),$(__KWARG_LIST)),\
     $(error ERROR: Keyword argument limit reached (ARGS_LIMIT=$(__BOWERBIRD_LIBS_KWARGS_ARGS_LIMIT))))
 endef
 
