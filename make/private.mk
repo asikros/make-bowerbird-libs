@@ -20,7 +20,6 @@ include bowerbird.mk
 include make/deps.mk
 
  # Targets
-.NOTPARALLEL: private_clean
 .PHONY: private_clean
 private_clean:
 	@echo "INFO: Cleaning directories:"
