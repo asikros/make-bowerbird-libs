@@ -6,50 +6,25 @@ WORKDIR_DEPS ?= $(error ERROR: Undefined variable WORKDIR_DEPS)
 #	Loads the bowerbird-deps system and declares all project dependencies.
 #	Dependencies are cloned into $(WORKDIR_DEPS) and included automatically.
 #
+#	Note: We use the low-level positional API (bowerbird::deps::git-dependency-low-level) to bootstrap
+#	all dependencies. This avoids a chicken-and-egg problem where the kwargs-based API
+#	requires bowerbird-libs (this project) to be loaded first.
+#
 
 # Load Bowerbird Dependency Tools
-BOWERBIRD_DEPS_BRANCH ?= main
-BOWERBIRD_DEPS.MK := $(WORKDIR_DEPS)/bowerbird-deps/bowerbird_deps.mk
-$(BOWERBIRD_DEPS.MK):
+# Define override variables with defaults
+bowerbird-deps.url ?= https://raw.githubusercontent.com/asikros/make-bowerbird-deps
+bowerbird-deps.branch ?= main
+bowerbird-deps.path ?= $(WORKDIR_DEPS)/bowerbird-deps
+bowerbird-deps.entry ?= bowerbird_deps.mk
+
+$(bowerbird-deps.path)/$(bowerbird-deps.entry):
 	@curl --silent --show-error --fail --create-dirs -o $@ -L \
-https://raw.githubusercontent.com/asikros/make-bowerbird-deps/\
-$(BOWERBIRD_DEPS_BRANCH)/src/bowerbird-deps/bowerbird-deps.mk
-include $(BOWERBIRD_DEPS.MK)
+$(bowerbird-deps.url)/$(bowerbird-deps.branch)/src/bowerbird-deps/bowerbird-deps.mk
+include $(bowerbird-deps.path)/$(bowerbird-deps.entry)
 
-# Initialize override variables to avoid undefined variable warnings
-bowerbird-help.path ?=
-bowerbird-help.url ?=
-bowerbird-help.branch ?=
-bowerbird-help.revision ?=
-bowerbird-help.entry ?=
-bowerbird-githooks.path ?=
-bowerbird-githooks.url ?=
-bowerbird-githooks.branch ?=
-bowerbird-githooks.revision ?=
-bowerbird-githooks.entry ?=
-bowerbird-test.path ?=
-bowerbird-test.url ?=
-bowerbird-test.branch ?=
-bowerbird-test.revision ?=
-bowerbird-test.entry ?=
-
-$(eval $(call bowerbird::git-dependency, \
-	name=bowerbird-help, \
-	path=$(WORKDIR_DEPS)/bowerbird-help, \
-	url=https://github.com/asikros/make-bowerbird-help.git, \
-	branch=main, \
-	entry=bowerbird.mk))
-
-$(eval $(call bowerbird::git-dependency, \
-	name=bowerbird-githooks, \
-	path=$(WORKDIR_DEPS)/bowerbird-githooks, \
-	url=https://github.com/asikros/make-bowerbird-githooks.git, \
-	branch=main, \
-	entry=bowerbird.mk))
-
-$(eval $(call bowerbird::git-dependency, \
-	name=bowerbird-test, \
-	path=$(WORKDIR_DEPS)/bowerbird-test, \
-	url=https://github.com/asikros/make-bowerbird-test.git, \
-	branch=main, \
-	entry=bowerbird.mk))
+# Bootstrap all dependencies using low-level positional API
+# Override variables are initialized automatically by git-dependency-low-level
+$(call bowerbird::deps::git-dependency-low-level,bowerbird-help,$(WORKDIR_DEPS)/bowerbird-help,https://github.com/asikros/make-bowerbird-help.git,main,,bowerbird.mk)
+$(call bowerbird::deps::git-dependency-low-level,bowerbird-githooks,$(WORKDIR_DEPS)/bowerbird-githooks,https://github.com/asikros/make-bowerbird-githooks.git,main,,bowerbird.mk)
+$(call bowerbird::deps::git-dependency-low-level,bowerbird-test,$(WORKDIR_DEPS)/bowerbird-test,https://github.com/asikros/make-bowerbird-test.git,main,,bowerbird.mk)

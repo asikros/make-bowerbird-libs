@@ -60,27 +60,23 @@ $(eval __BOWERBIRD_LIBS_KWARGS_PREFIX := $(__BOWERBIRD_LIBS_KWARGS_VALUE_PREFIX)
 # Clear all previous kwargs values AND active list to prevent leaking
 $(foreach v,$(filter $(__BOWERBIRD_LIBS_KWARGS_VALUE_PREFIX).%,$(.VARIABLES)),$(eval $v :=))
 $(eval __BOWERBIRD_LIBS_KWARGS_ACTIVE :=)
-# Build argument list dynamically by checking origin to avoid undefined variable warnings
-$(eval __KWARG_ARGS :=)
+# Parse each argument directly (not as a word list) to handle spaces around =
+$(eval __KWARG_COUNT := 0)
 $(foreach n,$(__BOWERBIRD_LIBS_KWARGS_ARG_NUMS),\
     $(if $(filter-out undefined,$(origin $n)),\
-        $(eval __KWARG_ARGS += $($n))\
+        $(eval __KWARG_COUNT := $(words x $(__KWARG_COUNT)))\
+        $(eval __KWARG_ARG := $(strip $($n)))\
+        $(if $(findstring =,$(__KWARG_ARG)),\
+            $(eval __KWARG_KEY := $(strip $(word 1,$(subst =, ,$(__KWARG_ARG)))))\
+            $(eval __KWARG_VAL := $(strip $(word 2,$(subst =, ,$(__KWARG_ARG)))))\
+            $(eval $(__BOWERBIRD_LIBS_KWARGS_PREFIX).$(__KWARG_KEY) := $(__KWARG_VAL))\
+            $(eval __BOWERBIRD_LIBS_KWARGS_ACTIVE += $(__KWARG_KEY))\
+        )\
     )\
 )
-# Space-separated list is already built via +=
-$(eval __KWARG_LIST := $(strip $(__KWARG_ARGS)))
-$(eval __KWARG_COUNT := $(words $(__KWARG_LIST)))
-# Parse each key=value pair
-$(foreach arg,$(__KWARG_LIST),\
-    $(if $(findstring =,$(arg)),\
-        $(eval __KWARG_KEY := $(word 1,$(subst =, ,$(strip $(arg)))))\
-        $(eval $(__BOWERBIRD_LIBS_KWARGS_PREFIX).$(__KWARG_KEY) := $(word 2,$(subst =, ,$(strip $(arg)))))\
-        $(eval __BOWERBIRD_LIBS_KWARGS_ACTIVE += $(__KWARG_KEY))\
-    )\
-)
-# Error if too many arguments
-$(if $(word $(__BOWERBIRD_LIBS_KWARGS_ARGS_LIMIT),$(__KWARG_LIST)),\
-    $(error ERROR: Keyword argument limit reached (ARGS_LIMIT=$(__BOWERBIRD_LIBS_KWARGS_ARGS_LIMIT))))
+# Error if too many arguments (check if position ARGS_LIMIT is defined)
+$(if $(filter-out undefined,$(origin $(__BOWERBIRD_LIBS_KWARGS_ARGS_LIMIT))),\
+    $(error ERROR: Keyword argument limit reached (max=$(words $(__BOWERBIRD_LIBS_KWARGS_ARG_NUMS)) args)))
 endef
 
 # bowerbird::lib::kwargs
@@ -91,7 +87,7 @@ endef
 #		$1: Key name
 #
 #	Returns:
-#		The value of $(__BOWERBIRD_LIBS_KWARGS_VALUE_PREFIX).<key>
+#		The value of $(__BOWERBIRD_LIBS_KWARGS_VALUE_PREFIX).<key>, or empty if not set.
 #
 #	Example:
 #		$(call bowerbird::lib::kwargs,name)
