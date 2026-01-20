@@ -16,7 +16,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 ```
 
-## [Unreleased] - YYYY-MM-DD
+## [Unreleased]
+
+### Deprecated
+- **ENTIRE REPOSITORY DEPRECATED**: This repository has been consolidated into [make-bowerbird-core](https://github.com/asikros/make-bowerbird-core)
+- All functionality from make-bowerbird-libs has been integrated into make-bowerbird-core
+- New projects should use make-bowerbird-core instead
+- Existing projects should migrate to make-bowerbird-core for continued support and updates
+- See [migration guide](https://github.com/asikros/make-bowerbird-core#migration-from-deps--libs) for upgrade instructions
+
+### Changed
+- Added deprecation error message to `bowerbird.mk` entry point
+- Updated README with deprecation notice and migration instructions
+
+---
+
+## [0.1.0] - 2026-01-15
 
 ### Added
 - Initial release with keyword argument parsing library
@@ -28,7 +43,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Automatic variable cleanup between calls
 - Support for up to 10 arguments
 
-### Changed
-### Deprecated
 ### Fixed
-### Security
+- Removed `.NOTPARALLEL` directive for Make 3.81 compatibility
+
+[Unreleased]: https://github.com/asikros/make-bowerbird-libs/commits/main
+[0.1.0]: https://github.com/asikros/make-bowerbird-libs/releases/tag/v0.1.0
